@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask Bookstore</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Flask Bookstore</h1>
+            <p class="subtitle">Discover Your Next Great Read</p>
+        </header>
+
+        <main>
+            <div class="book-grid" id="bookGrid">
+                {% if books %}
+                    {% for book in books %}
+                    <div class="book-card" data-book-id="{{ book.id }}">
+                        <div class="book-header">
+                            <h2 class="book-title">{{ book.title }}</h2>
+                            <p class="book-author">by {{ book.author }}</p>
+                        </div>
+                        <div class="book-body">
+                            <p class="book-description">{{ book.description }}</p>
+                        </div>
+                        <div class="book-footer">
+                            <span class="book-price">${{ "%.2f"|format(book.price) }}</span>
+                            <button class="btn-add-cart" onclick="addToCart({{ book.id }}, '{{ book.title }}')">
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-books">
+                        <p>No books available at the moment.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 Flask Bookstore. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
