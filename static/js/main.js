@@ -70,7 +70,9 @@ function showNotification(message, type = 'info') {
     setTimeout(() => {
         notification.style.animation = 'slideOut 0.3s ease-out';
         setTimeout(() => {
-            document.body.removeChild(notification);
+            if (notification.parentNode) {
+                notification.remove();
+            }
         }, 300);
     }, 3000);
 }
@@ -108,7 +110,17 @@ function init() {
     `;
     document.head.appendChild(style);
     
-    // Add event listeners for book cards
+    // Add event listeners for add to cart buttons
+    const addToCartButtons = document.querySelectorAll('.btn-add-cart');
+    addToCartButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const bookId = parseInt(this.dataset.bookId);
+            const bookTitle = this.dataset.bookTitle;
+            addToCart(bookId, bookTitle);
+        });
+    });
+    
+    // Add event listeners for book cards hover
     const bookCards = document.querySelectorAll('.book-card');
     bookCards.forEach(card => {
         card.addEventListener('mouseenter', function() {

@@ -17,7 +17,7 @@
             <div class="book-grid" id="bookGrid">
                 {% if books %}
                     {% for book in books %}
-                    <div class="book-card" data-book-id="{{ book.id }}">
+                    <div class="book-card" data-book-id="{{ book.id }}" data-book-title="{{ book.title }}">
                         <div class="book-header">
                             <h2 class="book-title">{{ book.title }}</h2>
                             <p class="book-author">by {{ book.author }}</p>
@@ -27,7 +27,7 @@
                         </div>
                         <div class="book-footer">
                             <span class="book-price">${{ "%.2f"|format(book.price) }}</span>
-                            <button class="btn-add-cart" onclick="addToCart({{ book.id }}, '{{ book.title }}')">
+                            <button class="btn-add-cart" data-book-id="{{ book.id }}" data-book-title="{{ book.title }}">
                                 Add to Cart
                             </button>
                         </div>
