@@ -70,9 +70,7 @@ function showNotification(message, type = 'info') {
     setTimeout(() => {
         notification.style.animation = 'slideOut 0.3s ease-out';
         setTimeout(() => {
-            if (notification.parentNode) {
-                notification.remove();
-            }
+            notification.remove();
         }, 300);
     }, 3000);
 }
