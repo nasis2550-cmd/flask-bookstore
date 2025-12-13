@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Shop Manager — ร้านหนังสือนนทบุรี</title>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body{font-family:'Prompt',sans-serif;background:#f6f3ef;color:#2b241c;margin:0}
+    header{padding:16px 20px;border-bottom:1px solid rgba(0,0,0,.08);background:#fff}
+    .wrap{max-width:1000px;margin:0 auto;padding:16px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(280px,1fr));gap:14px}
+    .card{background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:12px}
+    .muted{opacity:.7}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid rgba(0,0,0,.08);text-align:left}
+    th{background:#faf7f2}
+    .actions{display:flex;gap:6px}
+    .btn{cursor:pointer;display:inline-block;background:#ff8c42;color:#2b241c;border:none;border-radius:8px;padding:8px 12px;font-weight:600}
+    .btn.secondary{background:#e5ded6}
+    .btn.danger{background:#f25f5c;color:#fff}
+    input,textarea{width:100%;padding:8px;border:1px solid rgba(0,0,0,.12);border-radius:8px;background:#fff}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap" style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <h2 style="margin:0">จัดการร้านหนังสือ (เวอร์ชันเรียบง่าย)</h2>
+        <div id="adminStatus" class="muted">กำลังตรวจสอบสิทธิ์...</div>
+      </div>
+      <div><button class="btn secondary" onclick="location.href='home.html'">← กลับหน้าแรก</button></div>
+    </div>
+  </header>
+  <main class="wrap">
+    <div class="grid">
+      <div class="card">
+        <h3 style="margin-top:0">เพิ่มร้านใหม่</h3>
+        <form id="createForm" onsubmit="return false">
+          <input placeholder="ชื่อร้าน*" id="name">
+          <input placeholder="คำอธิบาย" id="description">
+          <textarea placeholder="ที่อยู่" id="address" rows="2"></textarea>
+          <input placeholder="คะแนน 0-5" id="rating" type="number" min="0" max="5" step="0.1">
+          <input placeholder="รูปภาพ URL (เช่น /images/ไฟล์.jpg)" id="image_url">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <input type="file" id="image_file" accept="image/*">
+            <img id="image_preview" alt="ตัวอย่างรูปภาพ" style="max-height:90px;border-radius:6px;display:none">
+          </div>
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <button class="btn" id="btnCreate">บันทึก</button>
+            <button class="btn secondary" type="reset">ล้าง</button>
+          </div>
+          <div id="createMsg" class="muted" style="margin-top:6px"></div>
+        </form>
+      </div>
+      <div class="card">
+        <h3 style="margin-top:0">รายการร้าน</h3>
+        <div id="tableBox">
+          <table>
+            <thead><tr><th>ID</th><th>ชื่อ</th><th>คะแนน</th><th>การทำงาน</th></tr></thead>
+            <tbody id="tbody"><tr><td colspan="4" class="muted">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    async function fetchJSON(url, opts){
+      try{ const r = await fetch(url, opts); const j = await r.json().catch(()=>({})); return {ok:r.ok, status:r.status, data:j}; }
+      catch(err){ return {ok:false, status:0, data:{}, error: String(err&&err.message||err)}; }
+    }
+    async function checkAdmin(){
+      const r = await fetchJSON('/api/me');
+      const el = document.getElementById('adminStatus');
+      if(r.ok && r.data && r.data.authenticated){ el.textContent = r.data.is_admin ? 'ADMIN ✅' : 'USER'; }
+      else { el.textContent = 'ไม่เข้าสู่ระบบ'; }
+    }
+    async function loadShops(){
+      const res = await fetchJSON('/api/shops');
+      const tbody = document.getElementById('tbody');
+      if(!res.ok){ tbody.innerHTML = '<tr><td colspan="4" class="muted">เชื่อมต่อ API ไม่ได้</td></tr>'; return; }
+      const list = Array.isArray(res.data) ? res.data : [];
+      if(!list.length){ tbody.innerHTML = '<tr><td colspan="4" class="muted">ไม่มีข้อมูลร้าน</td></tr>'; return; }
+      tbody.innerHTML = '';
+      list.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-row-id', String(s.id));
+        tr.innerHTML = `<td>${s.id}</td><td>${s.name}</td><td>${s.rating??''}</td><td class='actions'>
+          <button class='btn secondary' data-edit='${s.id}'>แก้ไข</button>
+          <button class='btn danger' data-del='${s.id}'>ลบ</button>
+        </td>`;
+        tbody.appendChild(tr);
+      });
+      tbody.querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', () => delShop(btn.getAttribute('data-del'))));
+      tbody.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.getAttribute('data-edit');
+        openEdit(id);
+      }));
+    }
+    async function delShop(id){ if(!confirm('ลบร้าน #'+id+' ?')) return; const r=await fetchJSON('/api/shops/'+id,{method:'DELETE'}); if(r.ok){ loadShops(); } else { alert('ลบไม่สำเร็จ'); } }
+    async function openEdit(id){
+      // close any existing inline editors (one-at-a-time behavior)
+      document.querySelectorAll('.inline-editor').forEach(el=> el.remove());
+      const r = await fetchJSON('/api/shops/'+id);
+      if(!r.ok || !r.data || r.data.status!=='success'){ alert('โหลดข้อมูลร้านไม่สำเร็จ'); return; }
+      const s = r.data.shop;
+      const tbody = document.getElementById('tbody');
+      const anchorRow = tbody.querySelector(`tr[data-row-id='${id}']`);
+      if(!anchorRow){ alert('ไม่พบแถวร้านในตาราง'); return; }
+      const tr = document.createElement('tr');
+      tr.className = 'inline-editor';
+      const td = document.createElement('td');
+      td.setAttribute('colspan','4');
+      td.innerHTML = `
+        <div class='grid' style='grid-template-columns:repeat(2,minmax(240px,1fr))'>
+          <input id='e_name' value='${(s.name||'').replace(/'/g,"&#39;")}' placeholder='ชื่อร้าน'>
+          <input id='e_rating' value='${s.rating??''}' type='number' step='0.1' min='0' max='5' placeholder='คะแนน'>
+          <input id='e_address' value='${(s.address||'').replace(/'/g,"&#39;")}' placeholder='ที่อยู่'>
+          <input id='e_phone' value='${(s.phone||'').replace(/'/g,"&#39;")}' placeholder='เบอร์โทร'>
+          <input id='e_hours' value='${(s.hours||'').replace(/'/g,"&#39;")}' placeholder='เวลาเปิดปิด'>
+          <input id='e_image' value='${(s.image_url||'').replace(/'/g,"&#39;")}' placeholder='รูปภาพ URL'>
+          <input id='e_lat' value='${s.latitude??''}' placeholder='ละติจูด'>
+          <input id='e_lng' value='${s.longitude??''}' placeholder='ลองจิจูด'>
+        </div>
+        <div style='margin-top:8px;display:flex;gap:8px'>
+          <button class='btn' id='e_save'>บันทึก</button>
+          <button class='btn secondary' id='e_cancel'>ยกเลิก</button>
+        </div>
+      `;
+      tr.appendChild(td);
+      anchorRow.insertAdjacentElement('afterend', tr);
+      document.getElementById('e_cancel').onclick = ()=> tr.remove();
+      document.getElementById('e_save').onclick = async ()=>{
+        const payload = {
+          name: document.getElementById('e_name').value.trim(),
+          rating: document.getElementById('e_rating').value.trim(),
+          address: document.getElementById('e_address').value.trim(),
+          phone: document.getElementById('e_phone').value.trim(),
+          hours: document.getElementById('e_hours').value.trim(),
+          image_url: document.getElementById('e_image').value.trim(),
+          lat: document.getElementById('e_lat').value.trim(),
+          lng: document.getElementById('e_lng').value.trim()
+        };
+        if(!payload.name){ alert('กรุณากรอกชื่อร้าน'); return; }
+        Object.keys(payload).forEach(k=>{ if(payload[k]==='') payload[k]=null; });
+        const res = await fetchJSON('/api/shops/'+id, {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+        if(res.ok){ alert('บันทึกสำเร็จ'); tr.remove(); loadShops(); } else { alert('บันทึกไม่สำเร็จ'); }
+      };
+    }
+    document.getElementById('btnCreate').addEventListener('click', async ()=>{
+      const payload = {
+        name: document.getElementById('name').value.trim(),
+        description: document.getElementById('description').value.trim(),
+        address: document.getElementById('address').value.trim(),
+        rating: document.getElementById('rating').value.trim(),
+        image_url: document.getElementById('image_url').value.trim()
+      };
+      if(!payload.name){ document.getElementById('createMsg').textContent = 'กรุณากรอกชื่อร้าน'; return; }
+      Object.keys(payload).forEach(k=>{ if(payload[k]==='') payload[k]=null; });
+      const r = await fetchJSON('/api/shops', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+      if(r.ok){ document.getElementById('createMsg').textContent = 'เพิ่มร้านสำเร็จ #' + r.data.id; document.getElementById('createForm').reset(); loadShops(); }
+      else { document.getElementById('createMsg').textContent = (r.data && (r.data.message||r.data.error)) || 'บันทึกไม่ได้'; }
+    });
+    // Upload image on selection and set URL automatically
+    (function(){
+      const fileEl = document.getElementById('image_file');
+      const urlEl = document.getElementById('image_url');
+      const preview = document.getElementById('image_preview');
+      if(!fileEl) return;
+      fileEl.addEventListener('change', async ()=>{
+        const f = fileEl.files && fileEl.files[0];
+        if(!f){ preview.style.display='none'; preview.src=''; return; }
+        try{
+          const fd = new FormData(); fd.append('file', f);
+          const r = await fetch('/api/upload-image', {method:'POST', body: fd});
+          const j = await r.json().catch(()=>({}));
+          if(r.ok && j && j.url){ urlEl.value=j.url; preview.src=j.url; preview.style.display='inline-block'; return; }
+        }catch(e){ /* fallback */ }
+        const reader = new FileReader(); reader.onload = ()=>{ const u=reader.result; if(typeof u==='string'){ urlEl.value=u; preview.src=u; preview.style.display='inline-block'; } }; reader.readAsDataURL(f);
+      });
+    })();
+    (async function(){ await checkAdmin(); await loadShops(); })();
+  </script>
+  <script src="profile.js" defer></script>
+</body>
+</html>

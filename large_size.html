@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="th">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>ร้านหนังสือ ขนาดใหญ่ - นนทบุรี</title>
+	<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<header style="background:linear-gradient(90deg,rgba(0,0,0,.4),rgba(0,0,0,.2));backdrop-filter:blur(6px)">
+		<div class="header-inner" style="padding:8px 16px;">
+			<h1 style="margin:0;font-size:20px">📚 ร้านหนังสือขนาดใหญ่ นนทบุรี</h1>
+			<div style="display:flex;gap:8px;flex-wrap:wrap">
+				<button class="btn" onclick="location.href='home.html'">🏠 กลับหน้าแรก</button>
+				<button class="btn" onclick="location.href='medium_size.html'">ขนาดกลาง</button>
+				<button class="btn" onclick="location.href='small_size.html'">ขนาดเล็ก</button>
+				<button class="btn" onclick="location.href='hq_size.html'">สำนักงานใหญ่</button>
+				<button class="btn" onclick="location.href='Comment.html'">💬 คอมเม้นต์ทั้งหมด</button>
+			</div>
+		</div>
+	</header>
+	<main class="container" style="display:block;max-width:1100px">
+		<div id="categorySummary" class="muted" style="margin:14px 0 6px"></div>
+		<div id="storeList" class="store-grid"></div>
+	</main>
+	<footer class="footer">© ร้านหนังสือนนทบุรี</footer>
+	<script src="main.js"></script>
+	<script>
+		// Auto filter: large size stores ("ใหญ่")
+		async function waitStores(){
+			const start = Date.now();
+			while(Date.now()-start < 4000){
+				if(Array.isArray(window.bookstores) && window.bookstores.length) return window.bookstores;
+				await new Promise(r=> setTimeout(r,80));
+			}
+			return window.bookstores||[];
+		}
+		(async function(){
+			await waitStores();
+			if(typeof filterByStoreType==='function'){
+				filterByStoreType('ใหญ่');
+			}else{
+				// fallback manual filter if function not exposed
+				const list = (window.bookstores||[]).filter(s=> (s.type||'').includes('ขนาดใหญ่'));
+				const parent = document.getElementById('storeList');
+				parent.innerHTML = list.map(s=> `<article class='store-card'><h3>${escapeHtml(s.name)}</h3><div class='meta'>${escapeHtml(s.location||'')} • ${escapeHtml(s.type||'')}</div><p class='address'>${escapeHtml(s.address||'')}</p><p class='phone'>📞 ${escapeHtml(s.phone||'-')}</p><p class='hours'>🕒 ${escapeHtml(s.hours||'')}</p><div class='tags'>${escapeHtml(s.category||'')} · ${escapeHtml(s.books||'')}</div><div class='rating'>⭐ ${s.rating??'–'}</div></article>`).join('');
+				document.getElementById('categorySummary').textContent = `ประเภทร้าน: ขนาดใหญ่ — ${list.length} ร้าน`;
+			}
+		})();
+		function escapeHtml(str){return (str||'').toString().replace(/[&<>"]|'/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));}
+	</script>
+</body>
+<script src="profile.js" defer></script>
+</html>

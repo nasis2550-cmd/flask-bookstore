@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>กองคอมเม้นต์ — ร้านหนังสือนนทบุรี</title>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    :root{
+      --bg1:#0a1b33; /* deep night blue */
+      --bg2:#0f2344;
+      --aurora1:#2bd9ff;
+      --aurora2:#7b5cff;
+      --aurora3:#00ffa6;
+      --glass: rgba(255,255,255,0.06);
+      --glass-border: rgba(255,255,255,0.12);
+      --glow: 0 10px 30px rgba(43,217,255,0.15), 0 0 60px rgba(0,255,166,0.08);
+    }
+    body{
+      color:#fff;
+      background: radial-gradient(1200px 800px at 80% -10%, rgba(123,92,255,0.18), transparent 60%),
+                  radial-gradient(900px 700px at -10% 20%, rgba(43,217,255,0.18), transparent 60%),
+                  linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height:100vh;
+      overflow-x:hidden;
+    }
+    /* animated aurora veil */
+    body::before{
+      content:""; position:fixed; inset:-20%;
+      background: conic-gradient(from 180deg at 50% 40%, rgba(43,217,255,0.12), rgba(0,0,0,0) 30%, rgba(0,255,166,0.12) 60%, rgba(0,0,0,0) 80%, rgba(123,92,255,0.12));
+      filter: blur(48px) saturate(120%);
+      animation: auroraShift 24s linear infinite;
+      pointer-events:none; z-index:-1;
+    }
+    /* soft stars */
+    body::after{
+      content:""; position:fixed; inset:0; pointer-events:none; z-index:-1;
+      background-image:
+        radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,0.25), transparent 60%),
+        radial-gradient(1.5px 1.5px at 70% 60%, rgba(255,255,255,0.18), transparent 60%),
+        radial-gradient(1.2px 1.2px at 40% 80%, rgba(255,255,255,0.18), transparent 60%),
+        radial-gradient(1.8px 1.8px at 85% 20%, rgba(255,255,255,0.2), transparent 60%);
+      animation: twinkle 6s ease-in-out infinite alternate;
+      opacity:.8;
+    }
+    .wrap{ max-width: 1080px; margin: 40px auto; padding: 0 16px; }
+    .toolbar{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+    .tag{ display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); font-size:12px; }
+    .list{ display:flex; flex-direction:column; gap:12px; }
+    .item{ background:linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.04)); border:1px solid var(--glass-border); border-radius:14px; padding:14px; box-shadow: var(--glow); backdrop-filter: blur(8px); animation: appear 420ms ease both; }
+    .row1{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
+    .store{ font-weight:700; color:#ffd166; }
+    .meta{ opacity:.7; font-size:12px; }
+    .text{ margin-top:8px; line-height:1.6; opacity:.95; white-space:pre-wrap; word-break:break-word; }
+    .muted{ opacity:.75; }
+    .composer{ display:flex; gap:8px; align-items:flex-start; flex: 1 1 auto; }
+    .composer textarea{ width:100%; min-height:88px; padding:12px; border-radius:12px; border:1px solid var(--glass-border); background:rgba(255,255,255,.08); color:#fff; resize:vertical; outline:none; transition: box-shadow .25s, border-color .25s, background .25s; backdrop-filter: blur(6px); }
+    .composer textarea:focus{ box-shadow: 0 0 0 3px rgba(43,217,255,0.25), 0 10px 30px rgba(43,217,255,0.18); border-color: rgba(43,217,255,0.6); background:rgba(255,255,255,.1); }
+    .group{ display:flex; gap:8px; align-items:center; }
+    .header-actions{ display:flex; gap:8px; align-items:center; }
+    .storebox{ margin-bottom:12px; }
+    /* Light style select with black text */
+    .select{ padding:10px 12px; min-width:260px; border-radius:10px; border:1px solid rgba(0,0,0,.25); background:#fff; color:#000; box-shadow:0 6px 20px rgba(0,0,0,0.25); }
+    .select option{ color:#000; background:#fff; }
+    /* buttons soft glow on hover if they inherit .btn from global */
+    .btn{ transition: transform .12s ease, box-shadow .25s ease; }
+    .btn:hover{ transform: translateY(-1px); box-shadow: 0 10px 18px rgba(0,0,0,0.25), 0 0 0 2px rgba(43,217,255,0.25) inset; }
+    .btn:active{ transform: translateY(0); }
+
+    /* keyframes */
+    @keyframes auroraShift{ 0%{transform:rotate(0deg) scale(1.1);} 50%{transform:rotate(180deg) scale(1.05);} 100%{transform:rotate(360deg) scale(1.1);} }
+    @keyframes twinkle{ from{opacity:.6;} to{opacity:.9;} }
+    @keyframes appear{ from{opacity:0; transform: translateY(6px);} to{opacity:1; transform:none;} }
+
+    @media (prefers-reduced-motion: reduce){
+      body::before, body::after { animation: none !important; }
+      .item{ animation:none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="toolbar">
+      <button class="btn" onclick="location.href='home.html'">🏠 กลับหน้าแรก</button>
+      <div class="group">
+        <span class="muted">ตัวกรอง:</span>
+        <select id="storeFilter" class="select"></select>
+        <button class="btn" id="btnClear">แสดงทั้งหมด</button>
+        <label class="tag" style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="checkbox" id="chkGlobal" style="transform:scale(1.1);cursor:pointer"> ความคิดเห็นทั่วไป
+        </label>
+      </div>
+      <div class="composer" style="flex:1 1 auto">
+        <textarea id="newComment" placeholder="พิมพ์คอมเม้นต์ทั่วไป หรือเลือกร้าน..." ></textarea>
+        <button class="btn" id="btnSend">📤 ส่งคอมเม้นต์</button>
+      </div>
+    </div>
+  <div id="storeInfo" class="item storebox" style="display:none"></div>
+    <div id="summary" class="muted" style="margin-bottom:10px"></div>
+    <div id="list" class="list"></div>
+  </div>
+
+  <script src="main.js"></script>
+  <script>
+    // Helpers
+    function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, m=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+    function parseStore(c){ return c.store || c.store_name || c.storeName || 'ร้านไม่ทราบชื่อ'; }
+    function parseUser(c){ return c.user || c.username || 'ผู้ใช้'; }
+    function parseTs(c){ return c.ts || c.timestamp || c.time || new Date().toISOString(); }
+
+    async function fetchBookstores(){
+      // Prefer server shops (SQLite), then legacy JSON, then embedded window.bookstores
+      try{
+        const r = await fetch('/api/shops');
+        if(r.ok){ const j = await r.json(); const arr = Array.isArray(j)? j : (j.data||[]); if(arr.length) return arr; }
+      }catch(e){}
+      try{
+        const r2 = await fetch('/api/bookstores');
+        if(r2.ok){ const j2 = await r2.json(); const arr2 = Array.isArray(j2)? j2 : (j2.data||[]); if(arr2.length) return arr2; }
+      }catch(e){}
+      try{
+        const r3 = await fetch('/data/bookstores.json');
+        if(r3.ok){ const j3 = await r3.json(); const arr3 = Array.isArray(j3)? j3 : (j3.data||[]); if(arr3.length) return arr3; }
+      }catch(e){}
+      return [];
+    }
+
+    const LOCAL_COMMENTS_KEY = 'comments_local';
+    function loadLocalComments(){
+      try { const arr = JSON.parse(localStorage.getItem(LOCAL_COMMENTS_KEY)||'[]'); return Array.isArray(arr)?arr:[]; } catch { return []; }
+    }
+    function saveLocalComments(arr){ localStorage.setItem(LOCAL_COMMENTS_KEY, JSON.stringify(arr)); }
+    function makeLocalId(){ return 'loc_'+Date.now().toString(36)+'_'+Math.random().toString(16).slice(2,8); }
+
+    async function fetchAllComments(){
+      let serverComments = [];
+      try {
+        const r = await fetch('/api/comments');
+        if(r.ok){
+          const data = await r.json();
+          const arr = Array.isArray(data) ? data : (data.data || []);
+          serverComments = arr.map(c => ({
+            id: c.id || null,
+            store: c.store || c.store_name || c.storeName || c.shop_name || 'ร้านไม่ทราบชื่อ',
+            user: c.user || c.username || 'ผู้ใช้',
+            text: c.text || '',
+            ts: c.ts || c.timestamp || c.time || c.created_at || new Date().toISOString(),
+            origin: 'server'
+          }));
+        }
+      } catch(e){ /* network failure: ignore, fallback to local only */ }
+      const local = loadLocalComments();
+      return [...serverComments, ...local];
+    }
+
+    function renderOptionsFromStores(stores, selected){
+      const names = stores.map(s=> s.name).filter(Boolean).sort((a,b)=> a.localeCompare(b,'th'));
+      const sel = document.getElementById('storeFilter');
+      sel.innerHTML = '<option value="">— เลือกร้าน —</option>' + names.map(s=> `<option ${selected===s?'selected':''} value="${s}">${s}</option>`).join('');
+    }
+
+    function renderList(items){
+      const list = document.getElementById('list');
+      if(items.length===0){ list.innerHTML = '<div class="muted">ยังไม่มีคอมเม้นต์</div>'; return; }
+      list.innerHTML = items.map(c=> {
+        const canDelete = true; // allow local delete always; server delete attempted if id
+        const badge = c.origin==='server' ? '<span class="tag" style="margin-left:6px">จากเซิร์ฟเวอร์</span>' : '<span class="tag" style="margin-left:6px;background:rgba(0,200,120,.25);border-color:rgba(0,200,120,.45)">ออฟไลน์</span>';
+        return `
+        <div class="item">
+          <div class="row1">
+            <div class="store">${escapeHtml(c.store)} ${badge}</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="meta">โดย ${escapeHtml(c.user)} • ${new Date(c.ts).toLocaleString('th-TH')}</div>
+              ${canDelete?`<button class="btn" data-del data-id="${c.id??''}" data-origin="${c.origin||'local'}" data-ts="${encodeURIComponent(c.ts)}" style="background:#d9534f">🗑️ ลบ</button>`:''}
+            </div>
+          </div>
+          <div class="text">${escapeHtml(c.text)}</div>
+        </div>`;
+      }).join('');
+      // wire delete buttons
+      list.querySelectorAll('[data-del]')?.forEach(btn=>{
+        btn.addEventListener('click', async ()=>{
+          const id = btn.getAttribute('data-id');
+          const origin = btn.getAttribute('data-origin');
+          if(!confirm('ต้องการลบคอมเม้นต์นี้ใช่หรือไม่?')) return;
+          if(origin==='server' && id){
+            try {
+              const r = await fetch(`/api/comments/${id}`, {method:'DELETE'});
+              // ignore failure silently offline
+            } catch(e){ /* offline */ }
+          } else {
+            // local deletion
+            const all = loadLocalComments();
+            const idx = all.findIndex(c=> c.id === id);
+            if(idx>-1){ all.splice(idx,1); saveLocalComments(all); }
+          }
+          await loadAndRender();
+        });
+      });
+    }
+
+    function imageCandidatesFor(name){
+      const n = (name||'').toLowerCase();
+      const cands = [];
+      if(!name) return cands;
+      ['.jpg','.png','.webp','.jpeg'].forEach(ext => cands.push(`images/${name}${ext}`));
+      const alias = {
+        'นายอินทร์ ปตท.ราชพฤกษ์ 4': ['images/นายอินทร์ สาขา ปตท.ราชพฤกษ์ 4.jpg'],
+        'นายอินทร์ The Mall งามวงศ์วาน': ['images/นายอินทร์ The Mall งามวงศ์วาน.jpg','images/นายอินทร์ สาขา The Mall งามวงศ์วาน ชั้น 4_n.jpg'],
+        'ซีเอ็ดบุ๊คเซ็นเตอร์ @ เดอะมอลล์ งามวงศ์วาน': ['images/ซีเอ็ดบุ๊คเซ็นเตอร์ @ เดอะมอลล์ งามวงศ์วาน.jpg'],
+        'ซีเอ็ดบุ๊คเซ็นเตอร์ บิ๊กซีรัตนาธิเบศร์ 2': ['images/ซีเอ็ดบุ๊คเซ็นเตอร์ บิ๊กซีรัตนาธิเบศร์ 2.jpg','images/ซีเอ็ดบุ๊คเซ็นเตอร์ บิ๊กซีรัตนาธิเบศร์2.jpg'],
+        'บีทูเอส เซ็นทรัลรัตนาธิเบศร์': ['images/บีทูเอส เซ็นทรัลรัตนาธิเบศร์.jpg','images/B2S เซ็นทรัลรัตนาธิเบศร์.png'],
+        'B2S เซ็นทรัลเวสต์วิลล์ ราชพฤกษ์': ['images/B2S เซ็นทรัลเวสต์วิลล์ ราชพฤกษ์.jpg','images/B2S เซ็นทรัลเวสต์วิลล์ ราชพฤกษ์.png'],
+        'ร้าน หนอนหนังสือ ติวานนท์': ['images/ร้าน หนอนหนังสือ ติวานนท์.jpg'],
+        'ร้านนนทบุรีบิ๊กบุ๊ค': ['images/ร้านนนทบุรีบิ๊กบุ๊ค.webp'],
+        'นายอินทร์ เซ็นทรัล แจ้งวัฒนะ': ['images/นายอินทร์ เซ็นทรัล แจ้งวัฒนะ.jpg','images/นายอินทร์ เซ็นทรัล แจ้งวัฒนะ 4.webp'],
+        'นิยายรัก': ['images/นิยายรัก.webp']
+      };
+      if(alias[name]) cands.unshift(...alias[name]);
+      if(n.includes('se-ed') || n.includes('ซีเอ็ด')) cands.push('images/SE-ED.jpg','SE-ED.jpg');
+      if(n.includes('b2s') || n.includes('บีทูเอส')) cands.push('images/B2S เซ็นทรัลรัตนาธิเบศร์.png','images/B2S.png');
+      if(n.includes('นายอินทร์')) cands.push('images/นายอิน2.jpg','images/นายอิน.jpg');
+      return [...new Set(cands)];
+    }
+
+    function renderStoreInfo(store){
+      const box = document.getElementById('storeInfo');
+      if(!store){ box.style.display='none'; box.innerHTML=''; return; }
+      box.style.display='';
+      box.innerHTML = `
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <div>
+            <div class="store" style="font-size:18px">${escapeHtml(store.name||'ร้าน')}</div>
+            <div class="meta">${escapeHtml(store.location||'')} • ${escapeHtml(store.type||'')}</div>
+            <div class="text" style="margin-top:6px">
+              📍 ${escapeHtml(store.address||'-')}<br>
+              📞 ${escapeHtml(store.phone||'-')} • 🕒 ${escapeHtml(store.hours||'-')}
+            </div>
+            <div class="muted" style="margin-top:6px">${escapeHtml(store.category||'')} · ${escapeHtml(store.books||'')}</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;white-space:nowrap">
+            <img id="storeInfoImg" alt="${escapeHtml(store.name||'ร้าน')}" style="width:180px;height:120px;object-fit:cover;border-radius:10px;display:none">
+            <a class="btn" href="https://www.google.com/maps/search/?api=1&query=${store.lat&&store.lng?store.lat+','+store.lng:encodeURIComponent(store.address||store.name||'')}" target="_blank">🗺️ เปิดแผนที่</a>
+          </div>
+        </div>
+      `;
+      // try load image
+      const cands = imageCandidatesFor(store.name);
+      const img = document.getElementById('storeInfoImg');
+      if(img && cands.length){
+        const loadNext = (i)=>{
+          if(i>=cands.length){ img.remove(); return; }
+          img.src = cands[i];
+          img.onload = ()=> img.style.display='block';
+          img.onerror = ()=> loadNext(i+1);
+        };
+        loadNext(0);
+      }
+    }
+
+    async function sendComment(){
+      const global = document.getElementById('chkGlobal').checked;
+      const selectedStore = document.getElementById('storeFilter').value.trim();
+      if(!global && !selectedStore){ alert('กรุณาเลือกร้าน หรือเลือก "ความคิดเห็นทั่วไป"'); return; }
+      const store = global ? 'ทั่วไป' : selectedStore;
+      const box = document.getElementById('newComment');
+      const text = (box.value||'').trim();
+      if(!text){ alert('กรุณาพิมพ์คอมเม้นต์'); return; }
+      // server session check
+      let isAuth = false;
+      try {
+        const me = await fetch('/api/me');
+        if(me.ok){ const j = await me.json(); isAuth = !!j.authenticated; }
+      } catch(e) {}
+      if(!isAuth){ alert('กรุณาเข้าสู่ระบบก่อนโพสต์คอมเม้นต์'); location.href='login_red.html'; return; }
+      // attempt to map store -> shop_id
+      let shop_id = null;
+      if(!global && store){
+        try{
+          const shopsRes = await fetch('/api/shops');
+          if(shopsRes.ok){
+            const shops = await shopsRes.json();
+            const found = shops.find(s=> s.name === store);
+            if(found) shop_id = found.id;
+          }
+        }catch{}
+      }
+      let posted = false;
+      // Try server first
+      try {
+        // Backend expects 'text' plus optional shop_id or store_name
+        const payload = shop_id ? { text, shop_id } : { text, store };
+        const r = await fetch('/api/comments', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        if(r.ok){ posted = true; }
+      } catch(e){ /* offline */ }
+      if(!posted){
+        // save locally
+        const all = loadLocalComments();
+        all.push({ id: makeLocalId(), store, user: 'ผู้ใช้', text, ts: new Date().toISOString(), origin:'local' });
+        saveLocalComments(all);
+      }
+      box.value='';
+      await loadAndRender();
+      alert(posted ? '✅ ส่งคอมเม้นต์สำเร็จ (เซิร์ฟเวอร์)' : '✅ ส่งคอมเม้นต์แบบออฟไลน์ (บันทึกในเครื่อง)');
+    }
+
+    // global state
+    let ALL = [];
+    let STORES = [];
+
+    async function loadAndRender(){
+      ALL = await fetchAllComments();
+      ALL.sort((a,b)=> new Date(b.ts) - new Date(a.ts));
+      const params = new URLSearchParams(location.search);
+      const s = (params.get('store')||'');
+      const global = document.getElementById('chkGlobal').checked;
+      let list;
+      if(global){ list = ALL.filter(c=> c.store==='ทั่วไป'); }
+      else if(s){ list = ALL.filter(c=> c.store===s); }
+      else { list = ALL; }
+      let summaryExtra = '';
+      if(global) summaryExtra = ' • โหมด: ความคิดเห็นทั่วไป';
+      else if(s) summaryExtra = ` • ร้าน: ${s}`;
+      document.getElementById('summary').textContent = `ทั้งหมด ${ALL.length} รายการ${summaryExtra}`;
+      renderList(list);
+      // placeholder logic
+      const ta = document.getElementById('newComment');
+      if(global){ ta.placeholder = 'พิมพ์คอมเม้นต์ทั่วไป (ไม่ระบุร้าน)'; }
+      else if(s){ ta.placeholder = `พิมพ์คอมเม้นต์สำหรับร้าน: ${s}`; }
+      else { ta.placeholder = 'พิมพ์คอมเม้นต์ทั่วไป หรือเลือกร้าน...'; }
+      ta.disabled = false;
+    }
+
+    async function waitForStores(timeout=2500){
+      const start = Date.now();
+      while(Date.now() - start < timeout){
+        if(Array.isArray(window.bookstores) && window.bookstores.length) return window.bookstores;
+        await new Promise(r=> setTimeout(r, 60));
+      }
+      return Array.isArray(window.bookstores) ? window.bookstores : [];
+    }
+
+    (async function(){
+      const params = new URLSearchParams(location.search);
+      const targetStore = params.get('store')||'';
+      STORES = await fetchBookstores();
+      if((!STORES || STORES.length===0)){
+        // รอให้ main.js เติม window.bookstores (มี fallback data)
+        const wb = await waitForStores(3000);
+        if(wb && wb.length) STORES = wb;
+      }
+      renderOptionsFromStores(STORES, targetStore);
+      // show store info if selected
+      const found = STORES.find(s=> s.name===targetStore);
+      renderStoreInfo(found);
+
+      document.getElementById('storeFilter').addEventListener('change', e=>{
+        const v = e.target.value; const url = new URL(location.href);
+        if(v) url.searchParams.set('store', v); else url.searchParams.delete('store');
+        history.replaceState(null,'',url.toString());
+        renderStoreInfo(STORES.find(s=> s.name===v));
+        loadAndRender();
+      });
+      document.getElementById('btnClear').addEventListener('click', ()=>{ const url = new URL(location.href); url.searchParams.delete('store'); history.replaceState(null,'',url); document.getElementById('storeFilter').value=''; renderStoreInfo(null); loadAndRender(); });
+      document.getElementById('btnSend').addEventListener('click', sendComment);
+      document.getElementById('chkGlobal').addEventListener('change', ()=>{
+        // If switching to global, clear store selection (UI only)
+        if(document.getElementById('chkGlobal').checked){
+          document.getElementById('storeFilter').value='';
+          const url = new URL(location.href); url.searchParams.delete('store'); history.replaceState(null,'',url);
+          renderStoreInfo(null);
+        }
+        loadAndRender();
+      });
+
+      await loadAndRender();
+    })();
+  </script>
+</body>
+<script src="profile.js" defer></script>
+</html>

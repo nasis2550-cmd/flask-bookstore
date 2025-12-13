@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: bookstore-web
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    autoDeploy: true
+    plan: free
+    region: oregon
+    healthCheckPath: /api/health
+    envVars:
+      - key: FLASK_SECRET_KEY
+        generateValue: true
+      - key: EMAIL_VERIFY_REQUIRED
+        value: "0"

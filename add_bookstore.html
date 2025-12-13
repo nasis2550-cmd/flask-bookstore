@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>เพิ่มร้านหนังสือ | ร้านหนังสือนนทบุรี</title>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body.bookstore{background:radial-gradient(circle at top,#1d2038,#05060f)}
+    .form-shell{max-width:1100px;margin:30px auto;padding:10px 20px;display:grid;gap:24px;grid-template-columns:minmax(320px,1fr) 320px;align-items:flex-start}
+    .form-panel{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:22px;padding:26px;color:#f2f4ff;box-shadow:0 20px 45px rgba(0,0,0,0.35);backdrop-filter:blur(18px)}
+    .form-panel header{margin-bottom:18px}
+    .form-panel h1{margin:0;font-size:28px}
+    .form-panel p.muted{font-size:14px;margin-top:6px;opacity:.75}
+    .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+    label.field{display:flex;flex-direction:column;font-size:13px;font-weight:500;gap:6px}
+    label.field small{opacity:0.75;font-weight:400}
+    input[type="text"],input[type="number"],textarea,select{
+      border-radius:16px;
+      border:1px solid rgba(21,35,66,0.2);
+      background:#ffffff;
+      color:#0f1b2d;
+      padding:12px 14px;
+      font-size:14px;
+      font-family:'Prompt',sans-serif;
+      transition:border-color .2s,box-shadow .2s;
+      box-shadow:0 4px 14px rgba(10,21,46,0.08);
+    }
+    textarea{min-height:110px;resize:vertical}
+    input::placeholder,textarea::placeholder,select::placeholder{color:rgba(15,27,45,0.45)}
+    input:focus,textarea:focus,select:focus{
+      outline:none;
+      border-color:#7dc9ff;
+      box-shadow:0 0 0 3px rgba(125,201,255,0.35);
+      background:#fff;
+      color:#0b1529;
+    }
+    .form-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px;align-items:center}
+    .btn-primary{padding:12px 28px;border-radius:24px;border:none;background:linear-gradient(120deg,#72f5ff,#7c83ff);color:#050d23;font-weight:600;cursor:pointer}
+    .btn-secondary{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);color:#f4f4ff;border-radius:22px;padding:10px 20px;cursor:pointer}
+    .upload-zone{margin-top:12px;padding:14px;border:1px dashed rgba(255,255,255,0.25);border-radius:18px;text-align:center;background:rgba(255,255,255,0.04)}
+    .upload-zone input{margin-top:8px}
+    .form-status{margin-top:18px;min-height:32px}
+    .msg{padding:10px 14px;border-radius:12px;font-size:13px}
+    .msg.ok{background:rgba(77,214,120,0.18);color:#7dffb4;border:1px solid rgba(77,214,120,0.5)}
+    .msg.err{background:rgba(246,97,97,0.14);color:#ff9f9f;border:1px solid rgba(246,97,97,0.45)}
+    .msg.info{background:rgba(126,150,255,0.14);color:#b0c5ff;border:1px solid rgba(126,150,255,0.4)}
+    .preview-panel{background:rgba(0,0,0,0.35);border-radius:22px;padding:20px;border:1px solid rgba(255,255,255,0.06);color:#eaf0ff}
+    .preview-panel h2{margin-top:0;font-size:22px}
+    .preview-panel img{width:100%;border-radius:18px;display:none;object-fit:cover;min-height:200px;background:#0b0f26}
+  .tip-card{margin-top:18px;padding:14px;border-radius:18px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:13px;line-height:1.5}
+  .tip-card ul{margin:10px 0 0 18px;padding:0}
+  .tip-card li{margin-bottom:4px}
+    @media(max-width:900px){
+      .form-shell{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body class="bookstore">
+  <header class="subheader">
+    <div class="header-inner">
+      <div class="header-left">
+        <button class="btn ghost" onclick="location.href='home.html'">⬅ กลับหน้าหลัก</button>
+        <h1 style="margin:0 0 0 14px;font-size:24px">เพิ่มร้านหนังสือใหม่</h1>
+      </div>
+      <div class="header-actions">
+        <button class="btn" onclick="location.href='edit_bookstore.html'">✏ ไปหน้าแก้ไข</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="form-shell">
+    <section class="form-panel">
+      <header>
+        <h1>รายละเอียดร้าน</h1>
+        <p class="muted">ใส่ข้อมูลครบถ้วนเพื่อให้ผู้ใช้ค้นหาได้ง่ายและแมปตำแหน่งถูกต้อง</p>
+      </header>
+      <form id="bookstoreForm" data-mode="create">
+        <div class="form-grid">
+          <label class="field">ชื่อร้าน*<input type="text" name="name" required placeholder="เช่น SE-ED Central"></label>
+          <label class="field">เบอร์โทรศัพท์<input type="text" name="phone" placeholder="02-xxx-xxxx"></label>
+          <label class="field">เวลาเปิด-ปิด<input type="text" name="hours" placeholder="10:00-22:00"></label>
+          <label class="field">คะแนน (0-5)<input type="number" name="rating" min="0" max="5" step="0.1" placeholder="4.5"></label>
+          <label class="field">แท็ก / หมวดหมู่<input type="text" name="tags" placeholder="นิยาย, การ์ตูน"></label>
+        </div>
+        <label class="field">ที่อยู่ละเอียด<textarea name="address" placeholder="ศูนย์การค้า / ถนน / จุดสังเกต"></textarea></label>
+        <label class="field">คำอธิบายร้าน<textarea name="description" placeholder="บรรยากาศ จุดเด่น โปรโมชั่น"></textarea></label>
+        <div class="form-grid">
+          <label class="field">Latitude*
+            <input type="text" name="latitude" placeholder="13.xxxxxx" required>
+          </label>
+          <label class="field">Longitude*
+            <input type="text" name="longitude" placeholder="100.xxxxxx" required>
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" id="autoLocation">📍 ใช้ตำแหน่งปัจจุบัน</button>
+          <span class="muted" id="locationPreview">📍 ยังไม่กำหนดพิกัด</span>
+        </div>
+        <div class="upload-zone">
+          <div>เลือกรูปหน้าร้าน (jpeg/png/webp)</div>
+          <input type="file" id="imageInput" accept="image/*">
+          <input type="hidden" name="image_url">
+          <input type="hidden" name="image_thumb_url">
+        </div>
+        <div class="form-actions" style="justify-content:flex-end">
+          <button type="submit" class="btn-primary">บันทึกร้านใหม่</button>
+        </div>
+        <div id="formStatus" class="form-status"></div>
+      </form>
+    </section>
+
+    <aside class="preview-panel">
+      <h2>ภาพตัวอย่าง</h2>
+      <img id="imagePreview" alt="ตัวอย่างรูปหน้าร้าน">
+      <div class="tip-card">
+        <strong>Tips:</strong>
+        <ul>
+          <li>ใช้ไฟล์น้อยกว่า 3MB เพื่อให้โหลดไวจัด</li>
+          <li>พิกัดควรตรวจจาก Google Maps เพื่อความแม่นยำ</li>
+          <li>กรณีไม่มีรูป สามารถระบุ URL รูปเดิมในช่องซ่อน (image_url)</li>
+        </ul>
+      </div>
+    </aside>
+  </main>
+
+  <script src="bookstore_form.js" defer></script>
+</body>
+</html>

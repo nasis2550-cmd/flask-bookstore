@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ร้านหนังสือนนทบุรี</title>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- Google Maps API - replace key with your own for production -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBGf_fqp0K88MfZ51RNeGBrqFUWLJ5VJHM&libraries=places" defer></script>
+</head>
+<body class="bookstore">
+  <header>
+    <div class="header-inner">           
+      <div class="header-left"> 
+        <h1>ร้านหนังสือนนทบุรี</h1>  
+        <div style="font-size:13px;opacity:0.8">ค้นหา | รีวิว | แผนที่</div>
+      </div>
+      <div class="header-actions">
+        <span id="userGreeting">👋 สวัสดี!</span>
+        <button class="btn" onclick="location.href='Comment.html'">💬 คอมเม้นต์ทั้งหมด</button>
+  <button class="btn" onclick="location.href='add_bookstore.html'">➕ เพิ่มร้านหนังสือ</button>
+        <button class="btn" onclick="location.href='login_red.html'">🔐 เข้าสู่ระบบ</button>
+      </div>  
+    </div>
+    <div class="filter-bar" role="group" aria-label="ตัวกรองร้านหนังสือ">
+      <span class="group-label">หมวด:</span>
+      <button class="btn" data-cat="ทั้งหมด" onclick="filterByCategory('ทั้งหมด')">ทั้งหมด</button>
+      <button class="btn" data-cat="มังงะ" onclick="filterByCategory('มังงะ')">มังงะ/การ์ตูน</button>
+      <button class="btn" data-cat="นิยาย" onclick="filterByCategory('นิยาย')">นิยาย</button>
+      <button class="btn" data-cat="ความรู้" onclick="filterByCategory('ความรู้')">ความรู้</button>
+      <button class="btn" data-cat="บอร์ดเกม" onclick="filterByCategory('บอร์ดเกม')">บอร์ดเกม</button>
+      <button class="btn" data-nearby="1" onclick="findNearby()">📍 ใกล้ฉัน</button>
+      <div class="filter-divider" aria-hidden="true"></div>
+      <span class="group-label">ขนาด:</span>
+      <button class="btn" data-type="all" onclick="filterByStoreType('all')">ทั้งหมด</button>
+      <button class="btn" data-type="ใหญ่" onclick="filterByStoreType('ใหญ่')">ใหญ่</button>
+      <button class="btn" data-type="กลาง" onclick="filterByStoreType('กลาง')">กลาง</button>
+      <button class="btn" data-type="เล็ก" onclick="filterByStoreType('เล็ก')">เล็ก</button>
+      <div class="filter-divider" aria-hidden="true"></div>
+      <span class="group-label" for="sortSelect">เรียงตาม:</span>
+      <select id="sortSelect" class="sort-select">
+        <option value="featured">แนะนำ</option>
+        <option value="latest">ร้านมาใหม่</option>
+        <option value="rating">คะแนนสูงสุด</option>
+        <option value="distance">ใกล้ฉัน</option>
+      </select>
+      <div id="categorySummary" class="muted" style="margin-left:auto;font-size:12px"></div>
+    </div>
+    <div class="status-row">
+      <div id="geoStatus" class="status-pill">📍 ยังไม่ได้ขอใช้ตำแหน่ง</div>
+      <button id="geoRequest" class="btn ghost">ขอใช้ตำแหน่ง</button>
+    </div>
+  </header>
+
+  <!-- ผู้สนับสนุน: แถบไฮไลต์ร้านที่สนับสนุนเว็บไซต์ -->
+  <section id="sponsorHero" class="sponsor-hero" aria-label="ผู้สนับสนุนเว็บไซต์" style="display:none"></section>
+
+  <!-- Hero Bookstore Theme -->
+  <section class="paper-bg" style="padding:30px 0 10px">
+    <div class="hero-bookstore">
+      <div class="hero-left">
+        <h2 class="display-heading">แหล่งรวม <span class="accent">หนังสือ</span> ดี ๆ ในนนทบุรี</h2>
+        <p style="max-width:480px;line-height:1.5;opacity:.85">สำรวจร้านหนังสือหลากหลายประเภท ค้นหาเล่มที่ใช่ ดูรีวิวจากผู้ใช้งาน และดูตำแหน่งบนแผนที่เพื่อไปเยี่ยมชมได้ง่าย ๆ</p>
+        <div class="search-bar-center" style="margin-left:0;padding-left:0">
+          <div class="search-pill" role="search" aria-label="ค้นหาร้านหรือหนังสือ">
+            <span class="pill-icon">🔎</span>
+            <input id="searchInput" class="pill-input" placeholder="ค้นหาร้าน / ชื่อหนังสือ / หมวดหมู่" />
+            <button id="btnSearch" class="pill-go">ค้นหา</button>
+          </div>
+        </div>
+        <div class="hero-ctas" style="margin-top:14px">
+          <button class="btn" onclick="document.getElementById('googleMap').scrollIntoView({behavior:'smooth'})">ดูแผนที่</button>
+          <button class="btn" onclick="location.href='Comment.html'">อ่านคอมเม้นต์</button>
+        </div>
+      </div>
+      <div class="hero-right">
+        <div class="image-frame" style="max-width:420px;width:100%">
+          <img src="images/SE-ED.jpg" alt="ตัวอย่างร้านหนังสือ" onerror="this.src='images/นายอิน.jpg'">
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+
+      <div style="margin-top:16px">
+        <strong>แผนที่ / ห้องสมุด</strong>
+        <div style="margin-top:8px">
+          <button class="btn" onclick="document.getElementById('googleMap').scrollIntoView({behavior:'smooth'})">🗺️ ดูแผนที่</button>
+          <button class="btn" onclick="document.getElementById('googleMapLibraries').scrollIntoView({behavior:'smooth'})">📚 ห้องสมุดใกล้เคียง</button>
+        </div>
+      </div>
+    </aside>
+    <section class="content">
+      <div id="stores" class="tab-content">
+        <div class="store-grid" id="storeList">
+          <!-- Store cards embedded from data/bookstores.json (static snapshot) -->
+            <article class="store-card">
+            <h3>SE-ED Book Store - Central Westgate</h3>
+            <div class="meta">เซ็นทรัล เวสต์เกต • ร้านหนังสือขนาดใหญ่</div>
+            <p class="address">VCH6+476 ตำบล เสาธงหิน อำเภอบางใหญ่ นนทบุรี 11110</p>
+            <p class="phone">📞 02 194 2776</p>
+            <p class="hours">🕒 10:00-22:00</p>
+            <div class="tags">ทั่วไป · นิยาย, การพัฒนา, ธุรกิจ</div>
+            <div class="rating">⭐ 4.8</div>
+          </article>
+          <article class="store-card">
+            <h3>ร้านนนทบุรีบิ๊กบุ๊ค</h3>
+            <div class="meta">ตรงข้ามสถานีรถไฟ • ร้านหนังสือขนาดเล็ก</div>
+            <p class="address">21 หมู่ 5 ซอยเทศบาล 7 ถ. บางกรวย - ไทรน้อย ตำบลโสนลอย อำเภอบางบัวทอง นนทบุรี 11110</p>
+            <p class="phone">📞 02 920 2416</p>
+            <p class="hours">🕒 09:00-17:00 (หยุด ส-อ)</p>
+            <div class="tags">ทั่วไป · นิยาย, การศึกษา, วรรณกรรม</div>
+            <div class="rating">⭐ 4.2</div>
+          </article>
+
+          <article class="store-card">
+            <h3>นายอินทร์ The Mall งามวงศ์วาน</h3>
+            <div class="meta">เดอะมอลล์ไลฟ์สโตร์ งามวงศ์วาน • ร้านหนังสือขนาดใหญ่</div>
+            <p class="address">ชั้น 4, แผนกเครื่องเขียน, เลขที่ 30/39 ถนน งามวงศ์วาน ตำบลบางเขน อำเภอเมืองนนทบุรี 11000</p>
+            <p class="phone">📞 02 023 7955</p>
+            <p class="hours">🕒 10:30-22:00</p>
+            <div class="tags">นวนิยาย · วรรณกรรม, นวนิยายไทย</div>
+            <div class="rating">⭐ 4.6</div>
+          </article>
+
+          <article class="store-card">
+            <h3>นายอินทร์ ปตท.ราชพฤกษ์ 4</h3>
+            <div class="meta">ปตท. ราชพฤกษ์ • ร้านหนังสือขนาดกลาง</div>
+            <p class="address">ปตท. ราชพฤกษ์ เลขที่ 97/5 หมู่ที่ 1 ตำบล ท่าอิฐ อำเภอปากเกร็ด นนทบุรี 11120</p>
+            <p class="phone">📞 02 195 2145</p>
+            <p class="hours">🕒 09:00-19:00</p>
+            <div class="tags">ทั่วไป · ธุรกิจ, การศึกษา</div>
+            <div class="rating">⭐ 4.4</div>
+          </article>
+
+          <article class="store-card">
+            <h3>ร้าน หนอนหนังสือ ติวานนท์</h3>
+            <div class="meta">ติวานนท์ • ร้านหนังสือขนาดเล็ก</div>
+            <p class="address">57 14/1 ถ. ติวานนท์ อำเภอเมืองนนทบุรี 11000</p>
+            <p class="phone">📞 084 731 3157</p>
+            <p class="hours">🕒 09:00-17:00</p>
+            <div class="tags">นิยาย · นิยาย, การ์ตูน, วรรณกรรม</div>
+            <div class="rating">⭐ 4.3</div>
+          </article>
+
+          <article class="store-card">
+            <h3>ซีเอ็ดบุ๊คเซ็นเตอร์ @ เดอะมอลล์ งามวงศ์วาน</h3>
+            <div class="meta">เดอะมอลล์ไลฟ์สโตร์ งามวงศ์วาน (ชั้น 3) • ร้านหนังสือขนาดใหญ่</div>
+            <p class="address">30/39-50 ถนน งามวงศ์วาน ตำบลบางเขน อำเภอเมืองนนทบุรี 11000</p>
+            <p class="phone">📞 02 030 2590</p>
+            <p class="hours">🕒 10:00-22:00</p>
+            <div class="tags">ทั่วไป · นิยาย, การศึกษา, ธุรกิจ</div>
+            <div class="rating">⭐ 4.7</div>
+          </article>
+
+          <article class="store-card">
+            <h3>นายอินทร์ เอสพรานาด รัตนาธิเบศร์</h3>
+            <div class="meta">เอสพลานาด ซีนีเพล็กซ์ งามวงศ์วาน-แคราย • ร้านหนังสือขนาดใหญ่</div>
+            <p class="address">Esplanade Ngamwongwan หมู่ที่ 8 ห้อง L3-06 เมืองนนทบุรี</p>
+            <p class="phone">📞 02 591 2235</p>
+            <p class="hours">🕒 10:30-20:00</p>
+            <div class="tags">นวนิยาย · วรรณกรรม, นวนิยายไทย</div>
+            <div class="rating">⭐ 4.5</div>
+          </article>
+
+          <article class="store-card">
+            <h3>นิยายรัก</h3>
+            <div class="meta">ซอย ติวานนท์ 18 • ร้านหนังสือขนาดเล็ก</div>
+            <p class="address">33 ซอย ติวานนท์ 18 ตำบลตลาดขวัญ เมืองนนทบุรี</p>
+            <p class="phone">📞 089 050 5713</p>
+            <p class="hours">🕒 09:00-19:00</p>
+            <div class="tags">นิยาย · โรแมนติก, นวนิยายไทย</div>
+            <div class="rating">⭐ 4.1</div>
+          </article>
+
+          <article class="store-card">
+            <h3>นายอินทร์ เซ็นทรัล แจ้งวัฒนะ</h3>
+            <div class="meta">เซ็นทรัล แจ้งวัฒนะ (ชั้น G) • ร้านหนังสือขนาดใหญ่</div>
+            <p class="address">99/9 หมู่ที่ 2 ชั้น G ถ. แจ้งวัฒนะ อำเภอปากเกร็ด</p>
+            <p class="phone">📞 02 101 0650</p>
+            <p class="hours">🕒 10:00-21:00</p>
+            <div class="tags">ทั่วไป · นิยาย, การศึกษา</div>
+            <div class="rating">⭐ 4.6</div>
+          </article>
+
+          <article class="store-card">
+            <h3>บีทูเอส เซ็นทรัลรัตนาธิเบศร์</h3>
+            <div class="meta">เซ็นทรัลนอร์ธวิลล์ • ร้านหนังสือขนาดใหญ่</div>
+            <p class="address">562 หมู่8 ถนน รัตนาธิเบศร์ ตำบลบางกระสอ เมืองนนทบุรี</p>
+            <p class="phone">📞 063 323 1028</p>
+            <p class="hours">🕒 10:00-21:00</p>
+            <div class="tags">ทั่วไป · นิยาย, การศึกษา, ธุรกิจ</div>
+            <div class="rating">⭐ 4.5</div>
+          </article>
+
+          <article class="store-card">
+            <h3>ซีเอ็ดบุ๊คเซ็นเตอร์ บิ๊กซีรัตนาธิเบศร์ 2</h3>
+            <div class="meta">บิ๊กซี รัตนาธิเบศร์ • ร้านหนังสือขนาดกลาง</div>
+            <p class="address">68/777 หมู่8 ถนน รัตนาธิเบศร์ ตำบลบางกระสอ เมืองนนทบุรี</p>
+            <p class="phone">📞 02 950 4852</p>
+            <p class="hours">🕒 10:30-19:30</p>
+            <div class="tags">ทั่วไป · นิยาย, การศึกษา</div>
+            <div class="rating">⭐ 4.3</div>
+          </article>
+
+          <article class="store-card">
+            <h3>59 เช่าหนังสือ</h3>
+            <div class="meta">ท่าทราย • ร้านเช่าหนังสือ</div>
+            <p class="address">59 ซอย สามัคคี 23 ท่าทราย เมืองนนทบุรี</p>
+            <p class="phone">📞 094 549 5419</p>
+            <p class="hours">🕒 10:00-21:00</p>
+            <div class="tags">เช่าหนังสือ · นิยาย, การศึกษา</div>
+            <div class="rating">⭐ 4.2</div>
+          </article>
+
+          <article class="store-card">
+            <h3>B2S เซ็นทรัลเวสต์วิลล์ ราชพฤกษ์</h3>
+            <div class="meta">เซ็นทรัล เวสต์วิลล์ • ร้านหนังสือขนาดใหญ่</div>
+            <p class="address">999 ถ. ราชพฤกษ์ ตำบล มหาสวัสดิ์ อำเภอบางกรวย</p>
+            <p class="phone">📞 064 587 6481</p>
+            <p class="hours">🕒 10:00-22:00</p>
+            <div class="tags">ทั่วไป · นิยาย, การศึกษา, ธุรกิจ</div>
+            <div class="rating">⭐ 4.7</div>
+          </article>
+
+          <article class="store-card">
+            <h3>Katang books888</h3>
+            <div class="meta">ประชาราษฎร์ 16 • ร้านหนังสือขนาดเล็ก</div>
+            <p class="address">11 ซอย ประชาราษฎร์ 16 ตำบลตลาดขวัญ เมืองนนทบุรี</p>
+            <p class="phone">📞 089 122 4978</p>
+            <p class="hours">🕒 10:00-19:00</p>
+            <div class="tags">นิยาย · นิยาย, การ์ตูน, วรรณกรรม</div>
+            <div class="rating">⭐ 4.4</div>
+          </article>
+
+          <article class="store-card">
+            <h3>ร้านหนังสือก้าวบรรทัด พระนั่งเกล้า</h3>
+            <div class="meta">พระนั่งเกล้า • ร้านหนังสือขนาดกลาง</div>
+            <p class="address">VFCF+628 ตำบล ไทรม้า เมืองนนทบุรี</p>
+            <p class="phone">📞 096 789 4645</p>
+            <p class="hours">🕒 08:00-17:00</p>
+            <div class="tags">ทั่วไป · นิยาย, การศึกษา</div>
+            <div class="rating">⭐ 4.4</div>
+          </article>
+
+          <article class="store-card">
+            <h3>ร้านนายอินทร์</h3>
+            <div class="meta">บางตลาด • ร้านหนังสือขนาดใหญ่</div>
+            <p class="address">นบ.3019 ตำบลบางตลาด อำเภอปากเกร็ด นนทบุรี</p>
+            <p class="phone">📞 -</p>
+            <p class="hours">🕒 10:00-20:00</p>
+            <div class="tags">ทั่วไป · นิยาย, การศึกษา, ธุรกิจ</div>
+            <div class="rating">⭐ 4.5</div>
+          </article>
+
+          <article class="store-card">
+            <h3>นายอินทร์ โฮมโปร ราชพฤกษ์</h3>
+            <div class="meta">HOMEPRO ราชพฤกษ์ • ร้านหนังสือขนาดกลาง</div>
+            <p class="address">HOMEPRO ราชพฤกษ์ 82 หมู่ที่ 2 อาคาร A ห้อง RT-4/1 ตำบล บางขุนกอง อำเภอบางกรวย นนทบุรี</p>
+            <p class="phone">📞 +66 2 423 3261</p>
+            <p class="hours">🕒 09:00-21:00</p>
+            <div class="tags">ทั่วไป · นิยาย, การศึกษา, ธุรกิจ</div>
+            <div class="rating">⭐ 4.3</div>
+          </article>
+
+          <article class="store-card">
+            <h3>นายอินทร์ สำนักงานใหญ่</h3>
+            <div class="meta">บางกรวย • สำนักงานใหญ่</div>
+            <p class="address">108 ถนน บางกรวย-กรุงนนท์ ตำบล มหาสวัสดิ์ อำเภอบางกรวย นนทบุรี 11130</p>
+            <p class="phone">📞 +66 2 423 9999</p>
+            <p class="hours">🕒 08:00-17:30 (ปิด ส-อ)</p>
+            <div class="tags">ทั่วไป</div>
+            <div class="rating">⭐ 4.2</div>
+          </article>
+        </div>
+      </div>
+      <div id="libraries" style="margin-top:18px;">
+        <div class="map-box" id="googleMapLibraries"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" style="color:#6f665c">© ร้านหนังสือนนทบุรี</footer>
+
+  <script src="main.js" defer></script>
+  <script src="profile.js" defer></script>
+
+  <!-- Back to top button -->
+  <button id="toTop" class="btn to-top" aria-label="กลับขึ้นด้านบน">⬆</button>
+
+  <script>
+    // small snow generator (DOM) - decorative
+    (function(){
+      const wrap = document.getElementById('snow')
+      if (!wrap) return
+      const COUNT = 40; // gentler snowfall
+      for(let i=0;i<COUNT;i++){
+        const d = document.createElement('div')
+        const size = (Math.random()*4 + 2)
+        d.style.left = (Math.random()*100)+'%'
+        d.style.width = size + 'px'
+        d.style.height = size + 'px'
+        d.style.opacity = (Math.random()*0.5 + 0.25)
+        d.style.animationDuration = (14 + Math.random()*14)+'s'
+        d.style.animationDelay = (Math.random()*10)+'s'
+        wrap.appendChild(d)
+      }
+    })()
+
+    // show greeting from server session (/api/me)
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      try {
+        const r = await fetch('/api/me');
+        if(r.ok){
+          const j = await r.json();
+          if(j.authenticated){
+            document.getElementById('userGreeting').textContent = `👋 สวัสดี, ${j.username}!`;
+            return;
+          }
+        }
+      } catch(e) {}
+      document.getElementById('userGreeting').textContent = '👋 สวัสดี!';
+    })
+
+    // Back to top behavior
+    const toTop = document.getElementById('toTop');
+    window.addEventListener('scroll', ()=>{
+      if(window.scrollY > 300) toTop.classList.add('show');
+      else toTop.classList.remove('show');
+    });
+    toTop.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
+  </script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ผู้ดูแล — บันทึกการเข้าสู่ระบบ</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+ body{font-family:'Prompt',sans-serif;background:#0f2344;color:#fff;margin:0;padding:20px}
+ .wrap{max-width:1080px;margin:0 auto}
+ h1{margin:0 0 12px}
+ .panel{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:12px;margin-bottom:16px}
+ label{font-size:13px}
+ input,select{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:#fff;color:#000}
+ table{width:100%;border-collapse:collapse;font-size:13px}
+ th,td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.2);}
+ th{background:rgba(255,255,255,.08);text-align:left}
+ .muted{opacity:.8}
+ .badge{display:inline-block;background:#333;padding:2px 6px;border-radius:6px;font-size:11px;margin-left:6px}
+ .ok{color:#8df39c}
+ .err{color:#ff9898}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ผู้ดูแล — บันทึก</h1>
+  <div class="panel">
+    <button class="btn" onclick="location.href='home.html'">← กลับหน้าแรก</button>
+    <button class="btn" onclick="location.href='admin.html'" style="margin-left:8px">⚙️ จัดการร้าน</button>
+  </div>
+  <div class="panel">
+    <h3 style="margin-top:0">Email Verifications & Login Markers <span id="vCount" class="badge">0</span></h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+      <label>ผู้ใช้: <input id="vUser" placeholder="username หรือ email"></label>
+      <label><input type="checkbox" id="vPending"> เฉพาะที่ยังไม่ใช้</label>
+      <button class="btn" onclick="loadVerifications()">โหลด</button>
+    </div>
+    <div id="vBox" class="muted">กำลังโหลด...</div>
+  </div>
+  <div class="panel">
+    <h3 style="margin-top:0">Login Events <span id="eCount" class="badge">0</span></h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+      <label>ผู้ใช้: <input id="eUser" placeholder="username"></label>
+      <label>จำนวน: <input id="eLimit" type="number" min="1" max="1000" value="200"></label>
+      <button class="btn" onclick="loadEvents()">โหลด</button>
+    </div>
+    <div id="eBox" class="muted">กำลังโหลด...</div>
+  </div>
+</div>
+<script>
+async function jget(url){ try{ const r=await fetch(url); if(!r.ok) throw 0; return r.json(); }catch(e){ return null; } }
+function renderTable(rows, cols){ const t=document.createElement('table'); const thead=document.createElement('thead'); const trh=document.createElement('tr'); cols.forEach(c=>{const th=document.createElement('th'); th.textContent=c; trh.appendChild(th);}); thead.appendChild(trh); t.appendChild(thead); const tb=document.createElement('tbody'); rows.forEach(r=>{const tr=document.createElement('tr'); cols.forEach(c=>{const td=document.createElement('td'); td.textContent = (r[c]!==undefined && r[c]!==null)? String(r[c]) : ''; tr.appendChild(td);}); tb.appendChild(tr);}); t.appendChild(tb); return t; }
+async function loadVerifications(){ const box=document.getElementById('vBox'); box.textContent='กำลังโหลด...'; const user=document.getElementById('vUser').value.trim(); const pending=document.getElementById('vPending').checked?'1':''; const qs=new URLSearchParams(); if(user) qs.set('user',user); if(pending) qs.set('pending','1'); const data=await jget('/api/admin/verifications'+(qs.toString()?('?'+qs.toString()):'')); if(!data){ box.textContent='โหลดไม่สำเร็จ (ต้องเป็น admin)'; return; } document.getElementById('vCount').textContent=data.length; const cols=['id','user_id','username','email','token','expires_at','used_at','created_at']; box.innerHTML=''; box.appendChild(renderTable(data, cols)); }
+async function loadEvents(){ const box=document.getElementById('eBox'); box.textContent='กำลังโหลด...'; const user=document.getElementById('eUser').value.trim(); const limit=parseInt(document.getElementById('eLimit').value||'200',10); const qs=new URLSearchParams(); if(user) qs.set('username',user); qs.set('limit',String(limit)); const data=await jget('/api/admin/login-events'+(qs.toString()?('?'+qs.toString()):'')); if(!data){ box.textContent='โหลดไม่สำเร็จ (ต้องเป็น admin)'; return; } document.getElementById('eCount').textContent=data.length; const cols=['id','user_id','username','success','ip','user_agent','created_at']; box.innerHTML=''; box.appendChild(renderTable(data, cols)); }
+(function(){ loadVerifications(); loadEvents(); })();
+</script>
+<script src="profile.js" defer></script>
+</body>
+</html>

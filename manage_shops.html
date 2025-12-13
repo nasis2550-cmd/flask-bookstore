@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>จัดการร้านหนังสือ</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+ body{font-family:'Prompt',sans-serif;background:#111;color:#fff;margin:0;padding:20px;}
+ h1{margin:0 0 20px;font-size:28px;}
+ .flex{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+ .panel{background:#1e1e1e;border:1px solid #5affe3;border-radius:14px;padding:16px;flex:1 1 380px;min-width:320px;}
+ label{display:block;margin-top:10px;font-weight:600;font-size:13px;}
+ input,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #444;background:#222;color:#fff;font-family:inherit;font-size:14px;}
+ input:focus,textarea:focus{outline:2px solid #4ea3ff;}
+ button{cursor:pointer;font-family:inherit;border:none;border-radius:8px;padding:10px 16px;font-weight:600;transition:.2s;background:#2874fa;color:#fff;}
+ button:hover{background:#3d85ff}
+ button.danger{background:#c62828;}button.danger:hover{background:#e53935}
+ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;}
+ th,td{padding:8px 10px;border-bottom:1px solid #6ad0ff;vertical-align:top;}
+ th{background:#222;text-align:left;}
+ tr:hover td{background:#181818;}
+ .small{font-size:12px;opacity:.7;}
+ .actions{display:flex;gap:6px;flex-wrap:wrap}
+ .msg{margin-top:10px;padding:10px;border-radius:8px;font-size:13px;}
+ .msg.ok{background:#1b4020;color:#8df39c;border:1px solid #296b33}
+ .msg.err{background:#40201b;color:#ff9898;border:1px solid #6b3329}
+ .badge{display:inline-block;background:#05e2ff;padding:2px 6px;border-radius:6px;font-size:11px;margin-left:4px}
+</style>
+</head>
+<body>
+<h1>🛠️ จัดการร้านหนังสือ <span class="badge" id="adminStatus">ตรวจสอบสิทธิ์...</span></h1>
+<div style="margin-bottom:14px;max-width:360px">
+  <label>Manager Key
+    <input id="managerKey" placeholder="dev-manager" style="margin-top:4px">
+  </label>
+</div>
+<div class="flex">
+  <div class="panel">
+    <h2 style="margin-top:0">➕ เพิ่มร้านใหม่</h2>
+    <form id="shopForm">
+      <label>ชื่อร้าน*<input required name="name" placeholder="เช่น นายอินทร์ สาขา ..."></label>
+      <label>คำอธิบาย<textarea name="description" rows="3" placeholder="รายละเอียดสั้นๆ"></textarea></label>
+      <label>ที่อยู่<textarea name="address" rows="2" placeholder="ที่อยู่"></textarea></label>
+      <label>คะแนน (0-5)<input name="rating" type="number" min="0" max="5" step="0.1" placeholder="4.5"></label>
+      <label>รูปภาพ URL<input name="image_url" placeholder="เช่น images/shop.png"></label>
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+        <button type="submit">บันทึก</button>
+        <button type="reset" style="background:#555">ล้าง</button>
+      </div>
+    </form>
+    <div id="formMsg"></div>
+  </div>
+  <div class="panel">
+    <h2 style="margin-top:0">📋 รายการร้าน</h2>
+    <div id="shopsContainer">
+      <table id="shopsTable">
+        <thead><tr><th style="width:40px">ID</th><th>ชื่อ</th><th>คะแนน</th><th>ที่อยู่</th><th>การทำงาน</th></tr></thead>
+        <tbody id="shopsBody"><tr><td colspan="5" class="small">กำลังโหลด...</td></tr></tbody>
+      </table>
+    </div>
+    <div id="listMsg"></div>
+  </div>
+</div>
+<script>
+async function fetchMe(){
+  try{const r=await fetch('/api/me');if(r.ok){return r.json();}}catch(e){}return {authenticated:false};}
+function showMsg(el, text, ok){el.innerHTML = `<div class="msg ${ok?'ok':'err'}">${text}</div>`;setTimeout(()=>{el.innerHTML='';},5000);}
+let IS_ADMIN = false;
+const managerKeyInput = document.getElementById('managerKey');
+let MANAGER_KEY = sessionStorage.getItem('manager_key') || '';
+if(managerKeyInput){
+  managerKeyInput.value = MANAGER_KEY;
+  managerKeyInput.addEventListener('input', e=>{
+    MANAGER_KEY = e.target.value.trim();
+    sessionStorage.setItem('manager_key', MANAGER_KEY);
+  });
+}
+async function loadShops(){
+  const body=document.getElementById('shopsBody');
+  body.innerHTML='<tr><td colspan="5" class="small">กำลังโหลด...</td></tr>';
+  try{const r=await fetch('/api/shops');if(!r.ok) throw 0;const shops=await r.json();if(!shops.length){body.innerHTML='<tr><td colspan="5" class="small">ไม่มีข้อมูลร้าน</td></tr>';return;}
+    body.innerHTML='';shops.forEach(s=>{const tr=document.createElement('tr');const delBtn = IS_ADMIN ? `<button class='danger' data-del='${s.id}'>ลบ</button>` : '';
+      tr.innerHTML=`<td>${s.id}</td><td>${s.name}</td><td>${s.rating??''}</td><td>${(s.address||'').slice(0,40)}</td><td><div class='actions'>${delBtn}</div></td>`;body.appendChild(tr);});
+    if(IS_ADMIN){ body.querySelectorAll('[data-del]').forEach(btn=>btn.addEventListener('click',()=>delShop(btn.getAttribute('data-del')))); }
+  }catch(e){body.innerHTML='<tr><td colspan="5" class="small">โหลดล้มเหลว</td></tr>';}
+}
+async function delShop(id){
+  if(!confirm('ลบร้านหมายเลข '+id+' ?')) return;
+  const headers = MANAGER_KEY ? {'x-manager-key':MANAGER_KEY} : undefined;
+  try{
+    const r=await fetch('/api/shops/'+id,{method:'DELETE', headers});
+    if(!r.ok){const j=await r.json().catch(()=>({error:'ลบไม่ได้'}));showMsg(listMsg,j.error||'ลบไม่ได้',false);return;}
+    showMsg(listMsg,'ลบแล้ว',true);loadShops();
+  }catch(e){showMsg(listMsg,'เครือข่ายผิดพลาด',false);} }
+async function addShop(data){
+  try{
+    // attach username for server auto-provision if no session
+    try{ const cur = JSON.parse(localStorage.getItem('currentUser')||'null'); if(cur && (cur.username||cur.email)) data.username = cur.username||cur.email; }catch{}
+    const r=await fetch('/api/shops',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    const j=await r.json();
+    if(!r.ok){showMsg(formMsg,j.error||'บันทึกไม่ได้',false);return;}
+    showMsg(formMsg,'เพิ่มร้านสำเร็จ (#'+j.id+')',true);
+    document.getElementById('shopForm').reset();
+    loadShops();
+  }catch(e){showMsg(formMsg,'เครือข่ายผิดพลาด',false);} }
+
+const formMsg=document.getElementById('formMsg');
+const listMsg=document.getElementById('listMsg');
+
+document.getElementById('shopForm').addEventListener('submit',e=>{e.preventDefault();const fd=new FormData(e.target);const payload={};fd.forEach((v,k)=>{if(v!=='' ) payload[k]=v;});if(payload.rating!==undefined){payload.rating=parseFloat(payload.rating);if(isNaN(payload.rating)) delete payload.rating;}addShop(payload);});
+
+(async function init(){const me=await fetchMe();const badge=document.getElementById('adminStatus');
+  IS_ADMIN = !!(me && me.authenticated && me.user && me.user.is_admin);
+  badge.textContent = IS_ADMIN ? 'ADMIN ✅' : 'USER';
+  badge.style.background = IS_ADMIN ? '#204a28' : '#333';
+  loadShops();})();
+</script>
+<script src="profile.js" defer></script>
+</body>
+</html>

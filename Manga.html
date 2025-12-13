@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="th">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>ร้านหนังสือหมวดมังงะ/การ์ตูน — นนทบุรี</title>
+	<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<div class="snow" id="snow"></div>
+	<header>
+		<div class="header-inner">
+			<div class="header-left">
+				<h1>📚 มังงะ/การ์ตูน — นนทบุรี</h1>
+				<div style="font-size:13px;opacity:0.9">รวมร้านที่เข้าข่ายหมวดมังงะ การ์ตูน ไลท์โนเวล</div>
+			</div>
+					<div class="header-actions">
+						<button class="btn" onclick="location.href='home.html'">🏠 หน้าหลัก</button>
+						<button class="btn" onclick="location.href='login_red.html'">🔐 เข้าสู่ระบบ</button>
+					</div>
+		</div>
+	</header>
+
+	<section class="hero">
+		<div class="hero-inner">
+			<div class="hero-text" style="width:min(95vw,1100px)">
+				<h2>หมวดมังงะ/การ์ตูน</h2>
+				<p class="lead">แสดงเฉพาะร้านที่มีแนว มังงะ การ์ตูน ไลท์โนเวล อนิเมะ เป็นต้น</p>
+				<div class="search-bar-center">
+					<div class="search-pill" role="button" aria-label="ค้นหา">
+						<span class="pill-icon">🔎</span>
+						<input id="searchInput" class="pill-input" placeholder="ค้นหาร้านหรือหนังสือ... (กด Enter หรือปุ่มค้นหา)" />
+						<button id="btnSearch" class="pill-go" title="ไปที่หน้าค้นหา">ค้นหา</button>
+					</div>
+				</div>
+				<div id="categorySummary" class="muted" style="margin-top:6px;font-size:13px"></div>
+			</div>
+		</div>
+	</section>
+
+	<main class="container">
+		<aside class="sidebar">
+			<strong>ทางลัด</strong>
+			<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+				<button class="btn" onclick="location.href='home.html'">กลับหน้าแรก</button>
+				<button class="btn" onclick="location.href='knowledge.html'">ไปหมวดความรู้</button>
+			</div>
+		</aside>
+		<section class="content">
+			<div class="store-grid" id="storeList"></div>
+		</section>
+	</main>
+
+	<footer class="footer">© ร้านหนังสือนนทบุรี — หมวดมังงะ</footer>
+
+	<script src="main.js" defer></script>
+	<script>
+		// เรียกใช้ตัวกรองหลังข้อมูลร้านถูกโหลดแล้ว
+		document.addEventListener('DOMContentLoaded', ()=>{
+			const apply = ()=>{
+				if(window.bookstores && window.filterByCategory){
+					filterByCategory('มังงะ');
+					return;
+				}
+				setTimeout(apply, 60);
+			};
+			apply();
+		});
+	</script>
+
+	<script>
+		// สร้างหิมะตกแบบเบาๆ (ตกแต่ง)
+		(function(){
+			const wrap = document.getElementById('snow'); if(!wrap) return;
+			for(let i=0;i<24;i++){
+				const d=document.createElement('div');
+				d.style.left=(Math.random()*100)+'%';
+				d.style.width=(Math.random()*6+3)+'px';
+				d.style.height=d.style.width; d.style.opacity=(Math.random()*0.6+0.3);
+				d.style.animationDuration=(8+Math.random()*10)+'s'; wrap.appendChild(d);
+			}
+		})();
+	</script>
+</body>
+<script src="profile.js" defer></script>
+</html>

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SQLite Viewer</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 20px; }
+    header { display:flex; gap:12px; align-items:center; margin-bottom:16px; }
+    select, button, input { padding:6px 10px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border:1px solid #ddd; padding:8px; }
+    th { background:#f5f5f5; }
+    .status { margin-top:6px; color:#555; }
+    .grid { display:grid; grid-template-columns: 260px 1fr; gap:16px; }
+    .sidebar { border:1px solid #ddd; padding:10px; border-radius:8px; }
+    .content { border:1px solid #ddd; padding:10px; border-radius:8px; }
+  </style>
+  <!-- sql.js via CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.js" integrity="sha512-zeYl6IUGb0K9uZCwH7Yk5lL7VfQe8uZqJk1aZkLxCwGZC9m8C2d6qkQvI7o8V8pWQb8xM2Zk6mA3pZf+eS5b+g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script defer src="sqlite_viewer.js"></script>
+</head>
+<body>
+  <h1>SQLite Viewer</h1>
+  <p>เปิดไฟล์ .sqlite / .db เพื่อดูข้อมูลตารางแบบออฟไลน์ (ประมวลผลบนเบราว์เซอร์)</p>
+
+  <header>
+    <input type="file" id="fileInput" accept=".db,.sqlite,.sqlite3" />
+    <button id="loadBtn">โหลดฐานข้อมูล</button>
+    <span class="status" id="status">ยังไม่ได้โหลดไฟล์</span>
+  </header>
+
+  <div class="grid">
+    <aside class="sidebar">
+      <h3>ตาราง</h3>
+      <select id="tables" size="12" style="width:100%"></select>
+      <div style="margin-top:10px; display:flex; gap:8px;">
+        <button id="previewBtn">ดูข้อมูล</button>
+        <button id="schemaBtn">ดูโครงสร้าง</button>
+      </div>
+    </aside>
+
+    <main class="content">
+      <h3 id="panelTitle">ผลลัพธ์</h3>
+      <div id="result"></div>
+    </main>
+  </div>
+
+</body>
+</html>
